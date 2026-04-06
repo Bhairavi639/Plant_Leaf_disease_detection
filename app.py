@@ -16,7 +16,13 @@ st.set_page_config(
 # ---------------------------------------------------
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model('trained_model.keras')
+    try:
+        return tf.keras.models.load_model("trained_model.keras")
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        return None
+
+model = load_model()
 
 # ---------------------------------------------------
 # Class Names (Must match training order exactly)
@@ -238,15 +244,13 @@ disease_info = {
 # IMPORTANT: No /255.0 because your model expects raw pixel values
 # ---------------------------------------------------
 def model_prediction(test_image):
-    model = load_model()
-
     image = tf.keras.preprocessing.image.load_img(test_image, target_size=(128, 128))
     input_arr = tf.keras.preprocessing.image.img_to_array(image)
 
     # Keep raw pixel values because your model was trained that way
-    input_arr = np.array([input_arr])
+    input_arr = np.expand_dims(input_arr, axis=0)
 
-    prediction = model.predict(input_arr)
+    prediction = model.predict(input_arr, verbose=0)
     result_index = np.argmax(prediction)
     confidence = np.max(prediction) * 100
 
@@ -368,6 +372,8 @@ elif app_mode == "Plant Disease Recognition":
         if st.button("Predict"):
             if test_image is None:
                 st.error("Please upload an image before prediction.")
+            elif model is None:
+                st.error("Model could not be loaded. Please check 'trained_model.keras' file.")
             else:
                 with st.spinner("Analyzing the leaf image..."):
                     test_index, confidence = model_prediction(test_image)
