@@ -1,0 +1,8 @@
+tf_env/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+train/
+valid/
+test/
+*.ipynb
